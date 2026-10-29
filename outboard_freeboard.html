@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>船外機換装に伴う船尾乾舷値（103条）</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root{--bg1:#0b1624;--bg2:#152538;--card:rgba(20,36,56,.72);--line:rgba(90,200,230,.28);--tx:#dbe8f3;--mute:#8aa3b8;--cy:#4fd6e8;--ok:#5fe3a1;--ng:#ff7a7a;--wa:#ffd166}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{min-height:100vh;color:var(--tx);font-family:"Noto Sans JP","Hiragino Sans",Meiryo,sans-serif;font-size:15px;line-height:1.7;
+background:linear-gradient(160deg,var(--bg1),var(--bg2)) fixed;position:relative}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;
+background-image:linear-gradient(rgba(79,214,232,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(79,214,232,.05) 1px,transparent 1px);background-size:32px 32px}
+.wrap{position:relative;max-width:520px;margin:0 auto;padding:20px 16px 48px}
+h1{font-size:17px;line-height:1.5;margin:6px 0 4px}
+.sub{color:var(--mute);font-size:12px;margin:0 0 16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
+.card h2{font-size:14px;margin:0 0 10px;color:var(--cy)}
+.mono{font-family:"Share Tech Mono",ui-monospace,monospace}
+label{display:block;font-size:13px;margin:10px 0 4px}
+label small{color:var(--mute)}
+.row{display:flex;gap:10px}.row>div{flex:1}
+input{width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:rgba(8,16,28,.8);color:var(--tx);font:16px "Share Tech Mono",ui-monospace,monospace}
+input:focus{outline:2px solid var(--cy);outline-offset:1px}
+.note{font-size:12px;color:var(--mute);margin:8px 0 0}
+button{width:100%;margin-top:14px;padding:12px;border:0;border-radius:999px;font:700 15px inherit;color:#04202a;background:linear-gradient(90deg,#4fd6e8,#6aa8ff);box-shadow:0 0 18px rgba(79,214,232,.45);cursor:pointer}
+button:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.kv{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px dashed rgba(138,163,184,.25)}
+.kv:last-child{border:0}
+.kv b{font-family:"Share Tech Mono",ui-monospace,monospace;font-weight:400;text-align:right}
+.badge{display:inline-block;padding:3px 12px;border-radius:999px;font-size:13px;font-weight:700;border:1px solid}
+.badge.ok{color:var(--ok);border-color:var(--ok)}.badge.ng{color:var(--ng);border-color:var(--ng)}.badge.wa{color:var(--wa);border-color:var(--wa)}
+.big{font-size:32px;color:var(--cy);margin:6px 0 2px;font-family:"Share Tech Mono",ui-monospace,monospace}
+.err{color:var(--ng);font-size:13px;margin-top:10px}
+.ref{font-size:12px;color:var(--mute)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>船外機換装に伴う最大搭載人員の算定に係る<br>103条で使用する船尾乾舷値</h1>
+  <p class="sub">船外機の換装・予備機の追加に伴う船尾乾舷変化量の計算</p>
+
+  <div class="card">
+    <h2>原則と例外</h2>
+    <p style="margin:0;font-size:13px">換装・予備機追加は復原性確認のため定員算定が必要です。原則、換装後に係留状態で船尾乾舷を計測し、最大搭載人員数を再算定します。下記条件を満たす場合に限り、計算による船尾乾舷変化量を算定根拠にできます。<b>実測した場合は実測値が優先</b>です。</p>
+  </div>
+
+  <div class="card">
+    <h2>STEP 1　船体・重量差</h2>
+    <div class="row">
+      <div><label for="L">L <small>[m]</small></label><input id="L" type="number" inputmode="decimal" step="any" min="0"></div>
+      <div><label for="B">B <small>[m]</small></label><input id="B" type="number" inputmode="decimal" step="any" min="0"></div>
+    </div>
+    <label for="W">重量差 <small>[kg]（換装後 − 換装前）</small></label>
+    <input id="W" type="number" inputmode="decimal" step="any">
+  </div>
+
+  <div class="card">
+    <h2>STEP 2　乾舷値（任意）</h2>
+    <label for="F0">換装前の船尾乾舷 <small>[cm]</small></label>
+    <input id="F0" type="number" inputmode="decimal" step="any" min="0">
+    <label for="FM">換装後の船尾乾舷 実測値 <small>[cm]</small></label>
+    <input id="FM" type="number" inputmode="decimal" step="any" min="0">
+    <p class="note">実測値を入力すると、計算値より優先して採用します。</p>
+    <button id="go" type="button">算定する</button>
+    <div id="err" class="err" role="alert"></div>
+  </div>
+
+  <div class="card" id="res" hidden>
+    <h2>結果</h2>
+    <div id="out"></div>
+  </div>
+
+  <div class="card">
+    <h2>計算式</h2>
+    <div class="kv"><span>適用条件</span><b>重量差 ≤ 1.22×10⁻³·L²·B [ton]（＝1.22·L²·B [kg]）</b></div>
+    <div class="kv"><span>船尾乾舷変化量</span><b>10 × 重量差 / (L×B) [m]（重量差はton）</b></div>
+    <p class="note">本ページでは重量差をkg、乾舷をcmで入出力します（計算時にton・mへ換算：変化量[cm] ＝ 重量差[kg] ÷ (L×B)）。換装後の船尾乾舷 ＝ 換装前の船尾乾舷 − 変化量（重量が増えれば乾舷は減少）</p>
+  </div>
+</div>
+<script>
+(function(){
+  var $=function(i){return document.getElementById(i)};
+  function num(id){var v=$(id).value.trim();return v===""?null:Number(v)}
+  function f(x,n){return x.toFixed(n)}
+  function run(){
+    var L=num("L"),B=num("B"),W=num("W"),F0=num("F0"),FM=num("FM"),err=$("err");
+    err.textContent="";
+    if(!(L>0)||!(B>0)||W===null||isNaN(W)){err.textContent="L・B（正の値）と重量差を入力してください。";$("res").hidden=true;return}
+    var lim=1.22*L*L*B, ok=W<=lim, d=ok?100*10*(W/1000)/(L*B):null, h="";
+    h+='<div class="kv"><span>1.22×10⁻³·L²·B</span><b>'+f(lim,1)+' kg</b></div>';
+    h+='<div class="kv"><span>重量差</span><b>'+f(W,1)+' kg</b></div>';
+    h+='<div class="kv"><span>条件判定</span><span class="badge '+(ok?'ok':'ng')+'">'+(ok?'満足（計算可）':'不適合（計算不可）')+'</span></div>';
+    if(ok) h+='<div class="kv"><span>船尾乾舷変化量（計算）</span><b>'+f(d,1)+' cm</b></div>';
+    var adopt=null,src="";
+    if(FM!==null&&!isNaN(FM)){adopt=FM;src="実測値（優先）"}
+    else if(ok&&F0!==null&&!isNaN(F0)){adopt=F0-d;src="計算値（換装前 − 変化量）"}
+    h+='<div style="margin-top:12px">103条で使用する船尾乾舷値</div>';
+    if(adopt!==null){
+      h+='<div class="big">'+f(adopt,1)+' cm</div><span class="badge '+(src.indexOf("実測")===0?'ok':'wa')+'">'+src+'</span>';
+      if(adopt<=0) h+='<p class="err">乾舷値が0以下です。入力値を確認してください。</p>';
+    }else if(!ok){
+      h+='<span class="badge ng">換装後に係留状態で船尾乾舷を実測してください</span>';
+    }else{
+      h+='<span class="badge wa">換装前の船尾乾舷を入力すると算出します</span>';
+    }
+    $("out").innerHTML=h;$("res").hidden=false;
+  }
+  $("go").addEventListener("click",run);
+  document.querySelectorAll("input").forEach(function(e){e.addEventListener("keydown",function(k){if(k.key==="Enter")run()})});
+})();
+</script>
+</body>
+</html>
